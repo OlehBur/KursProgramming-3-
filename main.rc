@@ -1,0 +1,270 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Ukrainian (Ukraine) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_UKR)
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+#pragma code_page(1251)
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_DIALOG1 DIALOGEX 0, 0, 146, 80
+STYLE DS_SETFONT | WS_POPUP | WS_BORDER
+FONT 16, "Times New Roman", 400, 0, 0xCC
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,16,64,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,88,64,50,14
+    EDITTEXT        ID_EDIT1,23,19,40,14,ES_AUTOHSCROLL
+    LTEXT           "X =",IDC_STATIC,9,22,12,8
+    CTEXT           "Enter the value of the function",IDC_STATIC,24,2,98,10,0,WS_EX_DLGMODALFRAME
+END
+
+IDD_HELP_BOX DIALOGEX 0, 0, 144, 57
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
+CAPTION "Help Box"
+FONT 16, "Times New Roman", 400, 0, 0xCC
+BEGIN
+    PUSHBUTTON      "ok",IDC_HB_OKBUTTON,46,46,50,11
+    LTEXT           "Blablablabla this`s help text",IDC_STATIC,28,0,77,8
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_DIALOG1, DIALOG
+    BEGIN
+        LEFTMARGIN, 17
+        RIGHTMARGIN, 139
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 73
+    END
+
+    IDD_HELP_BOX, DIALOG
+    BEGIN
+        LEFTMARGIN, 6
+        RIGHTMARGIN, 137
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 50
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_ICON_APP            ICON                    "RES/main_Icon.ico"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MENUPOPUP MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Input",                      IDM_RUN
+        MENUITEM "&Run",                        IDM_CALC
+        MENUITEM "&Result",                     IDM_RESULT_DRAW
+        MENUITEM "&Exit",                       IDM_QUIT
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_DIALOG1 AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+#endif    // Ukrainian (Ukraine) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (United States) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MAINFRAME MENU
+BEGIN
+    MENUITEM "Help",                        IDM_HELP
+    MENUITEM "Quit",                        IDM_QUIT
+    POPUP "Result"
+    BEGIN
+        MENUITEM "Draw\tShift+D",               IDM_RESULT_DRAW
+    END
+    MENUITEM "Save file",                   IDM_SAVE_FILE
+    MENUITEM "Calc",                        IDM_CALC
+    POPUP "File"
+    BEGIN
+        MENUITEM "Open\tCtrl+O",                IDM_FILE_OPEN
+    END
+    POPUP "Dialog"
+    BEGIN
+        MENUITEM "Run\tCtrl+R",                 IDM_RUN
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_HELP_BOX AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_DIALOG1 AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)\r\n"
+    "#ifdef _WIN32\r\n"
+    "LANGUAGE 9, 1\r\n"
+    "#pragma code_page(1252)\r\n"
+    "#endif //_WIN32\r\n"
+    "#include ""afxres.rc""         // Standard components\r\n"
+    "#include ""afxprint.rc""       // printing/print preview resources\r\n"
+    "#endif\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDR_MAINFRAME           BITMAP                  "res/toolbar1.bmp"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Toolbar
+//
+
+IDR_MAINFRAME TOOLBAR 18, 18
+BEGIN
+    BUTTON      IDM_HELP
+    BUTTON      IDM_QUIT
+    BUTTON      IDM_RESULT_DRAW
+    BUTTON      IDM_SAVE_FILE
+    BUTTON      IDM_CALC
+    BUTTON      IDM_FILE_OPEN
+    BUTTON      IDM_RUN
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDR_MAINFRAME ACCELERATORS
+BEGIN
+    "H",            IDM_HELP,               VIRTKEY, CONTROL, NOINVERT
+    "E",            IDM_QUIT,               VIRTKEY, CONTROL, NOINVERT
+    "D",            IDM_RESULT_DRAW,        VIRTKEY, SHIFT, NOINVERT
+    "S",            IDM_SAVE_FILE,          VIRTKEY, CONTROL, NOINVERT
+    "R",            IDM_CALC,               VIRTKEY, CONTROL, NOINVERT
+    "O",            IDM_FILE_OPEN,          VIRTKEY, CONTROL, NOINVERT
+    "I",            IDM_RUN,                VIRTKEY, CONTROL, NOINVERT
+END
+
+#endif    // English (United States) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE 9, 1
+#pragma code_page(1252)
+#endif //_WIN32
+#include "afxres.rc"         // Standard components
+#include "afxprint.rc"       // printing/print preview resources
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
