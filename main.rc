@@ -30,7 +30,7 @@ FONT 16, "Times New Roman", 400, 0, 0xCC
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,16,64,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,88,64,50,14
-    EDITTEXT        ID_EDIT1,23,19,40,14,ES_AUTOHSCROLL
+    EDITTEXT        IDD_XVALUE,23,19,40,14,ES_AUTOHSCROLL
     LTEXT           "X =",IDC_STATIC,9,22,12,8
     CTEXT           "Enter the value of the function",IDC_STATIC,24,2,98,10,0,WS_EX_DLGMODALFRAME
 END
@@ -91,8 +91,8 @@ IDR_MENUPOPUP MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Input",                      IDM_RUN
-        MENUITEM "&Run",                        IDM_CALC
+        MENUITEM "&Input Dialog ",              IDM_RUN
+        MENUITEM "&Numerical Result",           IDM_CALC
         MENUITEM "&Result",                     IDM_RESULT_DRAW
         MENUITEM "&Exit",                       IDM_QUIT
     END
@@ -137,11 +137,11 @@ BEGIN
     MENUITEM "Calc",                        IDM_CALC
     POPUP "File"
     BEGIN
-        MENUITEM "Open\tCtrl+O",                IDM_FILE_OPEN
+        MENUITEM "Open\tShift+O",               IDM_FILE_OPEN
     END
     POPUP "Dialog"
     BEGIN
-        MENUITEM "Run\tCtrl+R",                 IDM_RUN
+        MENUITEM "Run\tShift+R",                IDM_RUN
     END
 END
 
@@ -232,13 +232,13 @@ END
 
 IDR_MAINFRAME ACCELERATORS
 BEGIN
+    "C",            IDM_CALC,               VIRTKEY, CONTROL, NOINVERT
+    "O",            IDM_FILE_OPEN,          VIRTKEY, SHIFT, NOINVERT
     "H",            IDM_HELP,               VIRTKEY, CONTROL, NOINVERT
-    "E",            IDM_QUIT,               VIRTKEY, CONTROL, NOINVERT
+    "Q",            IDM_QUIT,               VIRTKEY, CONTROL, NOINVERT
     "D",            IDM_RESULT_DRAW,        VIRTKEY, SHIFT, NOINVERT
+    "R",            IDM_RUN,                VIRTKEY, SHIFT, NOINVERT
     "S",            IDM_SAVE_FILE,          VIRTKEY, CONTROL, NOINVERT
-    "R",            IDM_CALC,               VIRTKEY, CONTROL, NOINVERT
-    "O",            IDM_FILE_OPEN,          VIRTKEY, CONTROL, NOINVERT
-    "I",            IDM_RUN,                VIRTKEY, CONTROL, NOINVERT
 END
 
 #endif    // English (United States) resources
