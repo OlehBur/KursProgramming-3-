@@ -95,36 +95,19 @@ public:
 };
 
 NumberResult_Wnd::NumberResult_Wnd(CWnd* WndParent) {
-	CRect rect(200, 200, 900, 900);
-	Create(NULL, "The numerical functionResultult of the function", WS_OVERLAPPEDWINDOW, rect, WndParent, NULL);
-};
+	CRect rect(0, 0, 400, 100);
+	Create(NULL, "Calculation of the result", WS_OVERLAPPED | WS_SYSMENU | WS_CAPTION, rect, WndParent, NULL);
 
+	CenterWindow();//центруЇ по батьк≥вському в≥кн≥
 
-
-class CGraphWnd:public CFrameWnd {
-	public:
-	CGraphWnd(CWnd *Wnd);
-};
-
-CGraphWnd::CGraphWnd(CWnd *WndParent) {
-	Create(NULL, "Graphical functionResultult of the function", WS_OVERLAPPEDWINDOW, rectDefault, WndParent, NULL);
-};
-
-
-
-class COpenWnd :public CFrameWnd {
-public:
-	COpenWnd(CWnd* wnd);
-};
-
-COpenWnd::COpenWnd(CWnd* wndParent) {
-	CRect rect(300, 420, 600, 620);
-	Create(NULL, "Open File", WS_OVERLAPPEDWINDOW, rect, wndParent, NULL);
+	HICON hIcon = AfxGetApp()->LoadIcon(IDI_ICON_APP);
+	SetIcon(hIcon, true);  // вел. ≥конка | false - мала
 };
 
 
 
 class MainWnd :public CFrameWnd {
+	double phaseShift{ 0 };
 	float functionResult{ NULL };
 	int drawAnimCoeff{ 0 };
 
@@ -141,6 +124,7 @@ protected:
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnDraw();
 	afx_msg void OnPaint();
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnOpen();
 	afx_msg void OnSave();
 	afx_msg void Open_Input_Dialog();
@@ -152,6 +136,8 @@ protected:
 
 private:
 	inline double FunctionForDrawing(const int& x, const int& maxDiapY);
+	void StartFunctionAnimation();
+	void StopFunctionAnimation();
 	void DrawCoordinatePlane(CPaintDC* dc, const CRect& rect, const CPoint& centerPos, const CPoint& markDistance);
 	void DrawFunctionGraph(CPaintDC* dc, const CPoint& centerPos);
 
@@ -159,6 +145,7 @@ private:
 
 BEGIN_MESSAGE_MAP(MainWnd, CFrameWnd)
 	ON_WM_CREATE()
+	ON_WM_TIMER()
 	ON_WM_PAINT()
 
 	ON_COMMAND(IDM_FILE_OPEN, OnOpen)
@@ -190,7 +177,8 @@ MainWnd::MainWnd() {
 
 	m_hIcon = AfxGetApp()->LoadIcon(IDI_ICON_APP);
 	SetIcon(m_hIcon, true);
-	this->LoadAccelTable(MAKEINTRESOURCE(IDR_MAINFRAME));
+
+	this->LoadAccelTable(MAKEINTRESOURCE(IDR_MAINFRAME));//п≥двантаженн€ акселератор≥в меню
 
 	MainMenu.LoadMenu(IDR_MAINFRAME);//завантаженн€ основного меню
 	SetMenu(&MainMenu);//прив'€зка основного меню
@@ -223,61 +211,78 @@ int MainWnd::OnCreate(LPCREATESTRUCT lpCreateStruct) {
 }
 
 void MainWnd::OnOpen() {
-	CString currentFileString;
-	CFileDialog dlgOpen(TRUE, "txt", "", OFN_HIDEREADONLY, "Text File (*.txt)| *.txt| ALL Files(*.*)|*.*|", this);
-	if (dlgOpen.DoModal() == IDOK)
-	{
-		COpenWnd* OpenWnd = new COpenWnd(this);
-		OpenWnd->ShowWindow(SW_SHOWNORMAL);
-		OpenWnd->UpdateWindow();
-		CClientDC dc(OpenWnd);
-		dc.SetTextColor(RGB(45, 52, 52));
+	StopFunctionAnimation();
 
+	CString currentFileString;
+	const CString prefix = "Results of program calculations: ";
+	int prefixLength = prefix.GetLength();
+	CFileDialog dlgOpen(TRUE, "txt", "", OFN_HIDEREADONLY, "Text File (*.txt)| *.txt| ALL Files(*.*)|*.*|", this);
+	
+	if (dlgOpen.DoModal() == IDOK) {
 		CStdioFile File(dlgOpen.GetPathName(), CFile::modeRead | CFile::typeBinary);
-		while (File.ReadString(currentFileString))
-		{
-			dc.TextOut(10, 0, currentFileString, currentFileString.GetLength());
-			if (currentFileString[0] == 'X')
-			{
-				int minStrCounts = 2;
-				while (minStrCounts != currentFileString.GetLength())
-				{
-					EDIT_CONTROL_VALUE = EDIT_CONTROL_VALUE + currentFileString[minStrCounts];
-					minStrCounts++;
+
+		if (File.ReadString(currentFileString)) {
+			if (currentFileString.Left(prefixLength) == prefix) {
+				CString valueString = currentFileString.Mid(prefixLength);//Mid видаЇ р€док шо п≥сл€ преф≥ксу
+
+				if (valueString != "-nan(ind)") //п≥сл€ Ї нан число
+					if (_stscanf_s(valueString, "%f", &functionResult) == 1) //дал≥ число
+						EDIT_CONTROL_VALUE = valueString;
+					else {//дал≥ шось не зроз
+						functionResult = NULL;
+						EDIT_CONTROL_VALUE = "Invalid format entered for X.";
+					}
+
+				else {// не число
+					functionResult = NAN; 
+					EDIT_CONTROL_VALUE = "The function has no solutions.";
 				}
 			}
 		}
-		OpenWnd->UpdateWindow();
+
 		File.Close();
 	}
+
+	Get_Function_Results();
 };
 
 void MainWnd::OnSave() {
-	CString string = "Results of program calculations: ";
+	StopFunctionAnimation();
+
+	CString tittleResult = "Results of program calculations: ";
+	CString buffStringResult;
+
+	buffStringResult.Format("%f", functionResult);//конвер флоат значенн€ в стр≥нг
+	tittleResult += buffStringResult;
 
 	CFileDialog DlgSave(FALSE, "txt", "", OFN_HIDEREADONLY,
 		"Text File (*.txt)|*.txt|All Files(*.*)|*.*|", this);
-	string += functionResult_string;
 
 	if (DlgSave.DoModal() == IDOK)
 	{
 		CStdioFile File(DlgSave.GetPathName(),
 			CFile::modeCreate | CFile::modeWrite);
-		File.WriteString(LPCSTR(string));
+		File.WriteString(LPCSTR(tittleResult));
 	}
 };
 
 void MainWnd::OnExit() {
+	StopFunctionAnimation();
+
 	SendMessage(WM_CLOSE);
 };
 
 void MainWnd::Open_Input_Dialog() {
+	StopFunctionAnimation();
+
 	CMyDialog dialog(this);
 	dialog.DoModal();
 	Get_Function_Results();
 };
 
 void MainWnd::Get_Function_Results() {
+	StopFunctionAnimation();
+
 	float xValue =  atof(EDIT_CONTROL_VALUE);
 	HINSTANCE hDll;
 
@@ -288,11 +293,11 @@ void MainWnd::Get_Function_Results() {
 	functionResult = BurFunction(xValue);
 
 	if (isnan(functionResult)) {
-		strncpy(functionResult_string, "No solutions", sizeof(functionResult_string));
+		strncpy(functionResult_string, "The function has no solutions.", sizeof(functionResult_string));
 		functionResult_string[sizeof(functionResult_string) - 1] = '\0'; //закидуЇмо символ к≥нц€ р€дка вручну, бо strncpy цього не гарантуЇ
 	}
 	else {
-		sprintf(functionResult_string, "%f", functionResult);
+		sprintf(functionResult_string, "The solution of the function is a number: %f.", functionResult);
 	}
 
 
@@ -303,30 +308,68 @@ void MainWnd::Get_Function_Results() {
 	NumberResult_Wnd_Ptr->UpdateWindow();
 
 	CClientDC myDC(NumberResult_Wnd_Ptr);
+	CRect rect;
+	NumberResult_Wnd_Ptr->GetClientRect(&rect);//отримуЇм конкретно дл€ ч≥лда ќб-сть
+
 	myDC.SetTextColor(RGB(13, 66, 6));
-	myDC.TextOut(125, 25, functionResult_string, strlen(functionResult_string));
+	myDC.DrawText(functionResult_string, 
+		&rect, 
+		DT_SINGLELINE | DT_CENTER | DT_VCENTER);	//повне центруванн€
 
 	//OnDraw();
 };
 
 void MainWnd::OnHelp() {
-	::MessageBox(NULL, "To start work, open the menu \"Dialog>Run\", then enter the value X in the window field and confirm by pfunctionResultsing the OK key", "Help", MB_OK |
-		MB_ICONINFORMATION);
+	StopFunctionAnimation();
+
+	::MessageBox(NULL, "To start work, open the menu \"Dialog>Run\", then enter the value X in the window field and confirm by pfunctionResultsing the OK key", 
+		"Help",
+		MB_OK | MB_ICONINFORMATION);
 };
 
 void MainWnd::OnRButtonDown(UINT nFlags, CPoint point) {
 	CPoint cursorCliclPos;
-
 	GetCursorPos(&cursorCliclPos);
+
 	PopupMenu.GetSubMenu(0)->TrackPopupMenu(TPM_LEFTALIGN | TPM_LEFTBUTTON,
 		cursorCliclPos.x, cursorCliclPos.y,
 		this); //спав меню на кордах миш≥
 };
 
+void MainWnd::OnTimer(UINT_PTR nIDEvent)
+{
+	const int graphShifPart = 40;
+	if (nIDEvent == 1 && functionResult != NULL)
+	{
+		phaseShift += M_PI * 2 / graphShifPart;//один оберт
+			/*/ ((isnan(functionResult)) ?
+			50 : functionResult);*/	//M_PI * 2 / 30; // «м≥щенн€ на €кусь частину хвил≥ за кожний т≥к таймера
+		if (phaseShift >= M_PI * 2)
+			phaseShift -= M_PI * 2;
+
+		CRect wndRect;
+		GetClientRect(&wndRect);
+		wndRect.bottom -= WND_FRAME_BORDER_HEIGHT;
+		wndRect.top += WND_FRAME_BORDER_HEIGHT;
+		InvalidateRect(&wndRect, true);
+	}
+}
+
+void MainWnd::StartFunctionAnimation()
+{
+	SetTimer(1, 100, NULL); //  таймер на кожну чверть сек
+}
+
+void MainWnd::StopFunctionAnimation()
+{
+	KillTimer(1); // стоп ан≥ма функи
+}
+
 void MainWnd::OnDraw() {
-	CRect wndRect;
-	GetClientRect(&wndRect);
-	InvalidateRect(&wndRect, true);
+	//CRect wndRect;
+	//GetClientRect(&wndRect);
+	StartFunctionAnimation();
+	//InvalidateRect(&wndRect, true);
 }
 
 void MainWnd::OnPaint() {
@@ -405,14 +448,15 @@ void MainWnd::DrawFunctionGraph(CPaintDC* dc, const CPoint& centerPos) {
 
 	CPen* prevPen = dc->SelectObject(graph_Pen);
 	double amplitude = (centerPos.y - WND_FRAME_BORDER_HEIGHT)
-		/ ((isnan(functionResult)) ? 
-		1 : min(20, functionResult));
+		/ ((isnan(functionResult)) ?
+			1 : 
+			(functionResult > 12) ? 4 : functionResult);//min(20, functionResult));
 	double frequency = min(15, (isnan(functionResult))?
 		1: functionResult);
 
 	for (int x = -centerPos.x; x <= centerPos.x; x++)
 	{
-		double radian = (double)x / centerPos.x * (M_PI * 2) * frequency;
+		double radian = (double)x / centerPos.x * (M_PI * 2) * frequency+phaseShift;
 		int y = (int)(amplitude * sin(radian));
 
 		(x == -centerPos.x) ?
@@ -439,3 +483,4 @@ BOOL CMyApp::InitInstance() {
 };
 
 CMyApp app;
+
