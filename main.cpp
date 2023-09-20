@@ -72,8 +72,10 @@ class CAboutDlg : public CDialog {
 public:
 	CAboutDlg();
 	enum { IDD = IDD_HELP_BOX };
+
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);
+
 protected:
 	DECLARE_MESSAGE_MAP()
 };
@@ -96,13 +98,177 @@ public:
 
 NumberResult_Wnd::NumberResult_Wnd(CWnd* WndParent) {
 	CRect rect(0, 0, 400, 100);
-	Create(NULL, "Calculation of the result", WS_OVERLAPPED | WS_SYSMENU | WS_CAPTION, rect, WndParent, NULL);
+	Create(NULL, "Calculation of the result", 
+		WS_OVERLAPPED | WS_SYSMENU | WS_CAPTION, 
+		rect, WndParent, NULL);
 
 	CenterWindow();//центрує по батьківському вікні
 
 	HICON hIcon = AfxGetApp()->LoadIcon(IDI_ICON_APP);
 	SetIcon(hIcon, true);  // вел. іконка | false - мала
 };
+
+
+
+class CGraphWnd :public CFrameWnd {
+public:
+	CGraphWnd(CWnd* WndParent, double resultOfFunction);
+
+	void OnPaint();
+	void OnTimer(UINT_PTR nIDEvent);
+	
+
+private:
+	double phaseShift{ 0 };
+	double resultFromParent{ NULL };
+
+	inline double FunctionForDrawing(const int& x, const int& maxDiapY);
+	void StartFunctionAnimation();
+	void StopFunctionAnimation();
+	void DrawCoordinatePlane(CPaintDC* dc, const CRect& rect, const CPoint& centerPos, const CPoint& markDistance);
+	void DrawFunctionGraph(CPaintDC* dc, const CPoint& centerPos); 
+
+protected:
+	DECLARE_MESSAGE_MAP()
+};
+
+CGraphWnd::CGraphWnd(CWnd* WndParent, double resultOfFunction) {
+	resultFromParent = resultOfFunction;
+
+	Create(NULL, "Graphic Result",
+		WS_OVERLAPPED | WS_SYSMENU | WS_CAPTION,
+		rectDefault, WndParent, NULL);
+
+	HICON hIcon = AfxGetApp()->LoadIcon(IDI_ICON_APP);
+	SetIcon(hIcon, true);
+
+	SetTimer(1, 100, NULL); 
+}
+
+void CGraphWnd::StartFunctionAnimation()
+{
+	SetTimer(1, 100, NULL); //  таймер на кожну чверть сек
+}
+
+void CGraphWnd::StopFunctionAnimation()
+{
+	KillTimer(1); // стоп аніма функи
+}
+
+void CGraphWnd::OnPaint() {
+	CPaintDC dc(this); // об'єкт контексту пристрою для малювання
+	CRect wndRect;// розмір клієнтської об-сті вікна
+
+	GetClientRect(&wndRect);
+
+	CPoint centerPos = { // центр полотна (корд. площ.)
+		wndRect.Width() / 2,
+		wndRect.Height() / 2 };
+	CPoint markDistance = {// відстань між поділками на площині
+		wndRect.Width() / 50,
+		wndRect.Height() / 20 };
+
+	DrawCoordinatePlane(&dc, wndRect, centerPos, markDistance);
+
+	//if (functionResult != NULL) 
+		DrawFunctionGraph(&dc, centerPos);
+}
+
+void CGraphWnd::OnTimer(UINT_PTR nIDEvent) {
+	const int graphShifPart = 40;
+	if (nIDEvent == 1 /*&& resultFromParent != NULL*/)
+	{
+		phaseShift += M_PI * 2 / graphShifPart;//один оберт
+			/*/ ((isnan(functionResult)) ?
+			50 : functionResult);*/	//M_PI * 2 / 30; // Зміщення на якусь частину хвилі за кожний тік таймера
+		if (phaseShift >= M_PI * 2)
+			phaseShift -= M_PI * 2;
+
+		//CRect wndRect;
+		//GetClientRect(&wndRect);
+		//InvalidateRect(&wndRect, true);
+	}
+	Invalidate(); // Перемальовуємо вікно
+};
+
+inline double CGraphWnd::FunctionForDrawing(const int& x, const int& maxDiapY) {
+	const float frequency = 2.0f * 3.14 / (maxDiapY * 2); // Один період на всю ширину полотна
+
+	return maxDiapY * sin(frequency * x + 0.0f);
+};
+
+void CGraphWnd::DrawCoordinatePlane(CPaintDC* dc, const CRect& rect, const CPoint& centerPos, const CPoint& markDistance) {
+	int markSize = centerPos.y / 35;
+
+	CPen cordPlan_Pen(PS_SOLID, min(centerPos.y, centerPos.x) / 150, RGB(0, 0, 0)); //товщина відповідно до розмірів вікна
+	CPen* prevPen = dc->SelectObject(&cordPlan_Pen);
+
+	// осі площини
+	dc->MoveTo(0, centerPos.y);
+	dc->LineTo(centerPos.x * 2, centerPos.y);
+	dc->MoveTo(centerPos.x, 0);
+	dc->LineTo(centerPos.x, centerPos.y * 2);
+
+	//поділки осей
+	for (int i = 0; i < centerPos.x; i += markDistance.x) {// поділки по осі Х
+		dc->MoveTo(centerPos.x + i, centerPos.y - markSize);
+		dc->LineTo(centerPos.x + i, centerPos.y + markSize);
+		dc->MoveTo(centerPos.x - i, centerPos.y - markSize);
+		dc->LineTo(centerPos.x - i, centerPos.y + markSize);
+	}
+
+	for (int i = 0; i < centerPos.y; i += markDistance.y) {//поділки по осі У
+		dc->MoveTo(centerPos.x - markSize, centerPos.y + i);
+		dc->LineTo(centerPos.x + markSize, centerPos.y + i);
+		dc->MoveTo(centerPos.x - markSize, centerPos.y - i);
+		dc->LineTo(centerPos.x + markSize, centerPos.y - i);
+	}
+
+	// повернення попереднього пензла
+	dc->SelectObject(prevPen);
+};
+
+void CGraphWnd::DrawFunctionGraph(CPaintDC* dc, const CPoint& centerPos) {
+	CPen* graph_Pen;
+	switch ((int)resultFromParent) {
+	case 12:
+		graph_Pen = new CPen(PS_SOLID, min(centerPos.y, centerPos.x) / 100, RGB(10, 250, 10));
+		break;
+	case 3:
+		graph_Pen = new CPen(PS_SOLID, min(centerPos.y, centerPos.x) / 100, RGB(150, 150, 20));
+		break;
+	case 420:
+		graph_Pen = new CPen(PS_SOLID, min(centerPos.y, centerPos.x) / 100, RGB(0, 40, 250));
+		break;
+	default:
+		graph_Pen = new CPen(PS_DASH, 1, RGB(210, 0, 10));
+	}
+
+	CPen* prevPen = dc->SelectObject(graph_Pen);
+	double amplitude = (centerPos.y - WND_FRAME_BORDER_HEIGHT)
+		/ ((isnan(resultFromParent)) ?
+			1 :
+			(resultFromParent > 12) ? 4 : resultFromParent);//min(20, functionResult));
+	double frequency = min(15, (isnan(resultFromParent)) ?
+		1 : resultFromParent);
+
+	for (int x = -centerPos.x; x <= centerPos.x; x++)
+	{
+		double radian = (double)x / centerPos.x * (M_PI * 2) * frequency + phaseShift;
+		int y = (int)(amplitude * sin(radian));
+
+		(x == -centerPos.x) ?
+			dc->MoveTo(x + centerPos.x, centerPos.y - y) :
+			dc->LineTo(x + centerPos.x, centerPos.y - y);
+	}
+
+	dc->SelectObject(prevPen);
+};
+
+BEGIN_MESSAGE_MAP(CGraphWnd, CFrameWnd)
+	ON_WM_TIMER()
+	ON_WM_PAINT()
+END_MESSAGE_MAP()
 
 
 
@@ -133,13 +299,6 @@ protected:
 	afx_msg void OnHelp();
 	afx_msg void OnRButtonDown(UINT nFlags, CPoint point);
 	DECLARE_MESSAGE_MAP();
-
-private:
-	inline double FunctionForDrawing(const int& x, const int& maxDiapY);
-	void StartFunctionAnimation();
-	void StopFunctionAnimation();
-	void DrawCoordinatePlane(CPaintDC* dc, const CRect& rect, const CPoint& centerPos, const CPoint& markDistance);
-	void DrawFunctionGraph(CPaintDC* dc, const CPoint& centerPos);
 
 };
 
@@ -211,7 +370,7 @@ int MainWnd::OnCreate(LPCREATESTRUCT lpCreateStruct) {
 }
 
 void MainWnd::OnOpen() {
-	StopFunctionAnimation();
+	/*StopFunctionAnimation();*/
 
 	CString currentFileString;
 	const CString prefix = "Results of program calculations: ";
@@ -247,7 +406,7 @@ void MainWnd::OnOpen() {
 };
 
 void MainWnd::OnSave() {
-	StopFunctionAnimation();
+	/*StopFunctionAnimation();*/
 
 	CString tittleResult = "Results of program calculations: ";
 	CString buffStringResult;
@@ -267,21 +426,20 @@ void MainWnd::OnSave() {
 };
 
 void MainWnd::OnExit() {
-	StopFunctionAnimation();
+	/*StopFunctionAnimation();*/
 
 	SendMessage(WM_CLOSE);
 };
 
 void MainWnd::Open_Input_Dialog() {
-	StopFunctionAnimation();
+	/*StopFunctionAnimation();*/
 
 	CMyDialog dialog(this);
 	dialog.DoModal();
-	Get_Function_Results();
 };
 
 void MainWnd::Get_Function_Results() {
-	StopFunctionAnimation();
+	/*StopFunctionAnimation();*/
 
 	float xValue =  atof(EDIT_CONTROL_VALUE);
 	HINSTANCE hDll;
@@ -320,7 +478,7 @@ void MainWnd::Get_Function_Results() {
 };
 
 void MainWnd::OnHelp() {
-	StopFunctionAnimation();
+	/*StopFunctionAnimation();*/
 
 	::MessageBox(NULL, "To start work, open the menu \"Dialog>Run\", then enter the value X in the window field and confirm by pfunctionResultsing the OK key", 
 		"Help",
@@ -355,21 +513,16 @@ void MainWnd::OnTimer(UINT_PTR nIDEvent)
 	}
 }
 
-void MainWnd::StartFunctionAnimation()
-{
-	SetTimer(1, 100, NULL); //  таймер на кожну чверть сек
-}
 
-void MainWnd::StopFunctionAnimation()
-{
-	KillTimer(1); // стоп аніма функи
-}
+
+
 
 void MainWnd::OnDraw() {
-	//CRect wndRect;
-	//GetClientRect(&wndRect);
-	StartFunctionAnimation();
-	//InvalidateRect(&wndRect, true);
+	CGraphWnd* GraphWnd = new CGraphWnd(this, functionResult);
+	GraphWnd->ShowWindow(SW_SHOWNORMAL);
+	GraphWnd->UpdateWindow();
+ 
+	//StartFunctionAnimation();
 }
 
 void MainWnd::OnPaint() {
@@ -386,87 +539,12 @@ void MainWnd::OnPaint() {
 		wndRect.Height() / 20 };
 	
 
-	DrawCoordinatePlane(&dc, wndRect, centerPos, markDistance);
+	//DrawCoordinatePlane(&dc, wndRect, centerPos, markDistance);
 
-	if (functionResult != NULL) //EDIT_CONTROL_VALUE.GetLength())
-		DrawFunctionGraph(&dc, centerPos);
+	//if (functionResult != NULL) //EDIT_CONTROL_VALUE.GetLength())
+	//	DrawFunctionGraph(&dc, centerPos);
 
 };
-
-inline double MainWnd::FunctionForDrawing(const int& x, const int &maxDiapY) {
-	const float frequency = 2.0f * 3.14 / (maxDiapY * 2); // Один період на всю ширину полотна
-
-	return maxDiapY * sin(frequency * x + 0.0f);
-};
-
-void MainWnd::DrawCoordinatePlane(CPaintDC* dc, const CRect& rect, const CPoint& centerPos, const CPoint& markDistance) {
-	int markSize = centerPos.y / 35;
-
-	CPen cordPlan_Pen(PS_SOLID, min(centerPos.y, centerPos.x) / 150, RGB(0, 0, 0)); //товщина відповідно до розмірів вікна
-	CPen* prevPen = dc->SelectObject(&cordPlan_Pen);
-
-	// осі площини
-	dc->MoveTo(0, centerPos.y);
-	dc->LineTo(centerPos.x * 2, centerPos.y);
-	dc->MoveTo(centerPos.x, 0);
-	dc->LineTo(centerPos.x, centerPos.y * 2);
-
-	//поділки осей
-	for (int i = 0; i < centerPos.x; i += markDistance.x) {// поділки по осі Х
-		dc->MoveTo(centerPos.x + i, centerPos.y - markSize);
-		dc->LineTo(centerPos.x + i, centerPos.y + markSize);
-		dc->MoveTo(centerPos.x - i, centerPos.y - markSize);
-		dc->LineTo(centerPos.x - i, centerPos.y + markSize);
-	}
-
-	for (int i = 0; i < centerPos.y; i += markDistance.y) {//поділки по осі У
-		dc->MoveTo(centerPos.x - markSize, centerPos.y + i);
-		dc->LineTo(centerPos.x + markSize, centerPos.y + i);
-		dc->MoveTo(centerPos.x - markSize, centerPos.y - i);
-		dc->LineTo(centerPos.x + markSize, centerPos.y - i);
-	}
-
-	// повернення попереднього пензла
-	dc->SelectObject(prevPen);
-};
-
-void MainWnd::DrawFunctionGraph(CPaintDC* dc, const CPoint& centerPos) {
-	CPen* graph_Pen;
-	switch ((int)functionResult) {
-	case 12:
-		graph_Pen = new CPen(PS_SOLID, min(centerPos.y, centerPos.x) / 100, RGB(10, 250, 10));
-		break;
-	case 3:
-		graph_Pen = new CPen(PS_SOLID, min(centerPos.y, centerPos.x) / 100, RGB(150, 150, 20));
-		break;
-	case 420:
-		graph_Pen = new CPen(PS_SOLID, min(centerPos.y, centerPos.x) / 100, RGB(0, 40, 250));
-		break;
-	default:
-		graph_Pen = new CPen(PS_DASH, 1, RGB(210, 0, 10));
-	}
-
-	CPen* prevPen = dc->SelectObject(graph_Pen);
-	double amplitude = (centerPos.y - WND_FRAME_BORDER_HEIGHT)
-		/ ((isnan(functionResult)) ?
-			1 : 
-			(functionResult > 12) ? 4 : functionResult);//min(20, functionResult));
-	double frequency = min(15, (isnan(functionResult))?
-		1: functionResult);
-
-	for (int x = -centerPos.x; x <= centerPos.x; x++)
-	{
-		double radian = (double)x / centerPos.x * (M_PI * 2) * frequency+phaseShift;
-		int y = (int)(amplitude * sin(radian));
-
-		(x == -centerPos.x) ?
-			dc->MoveTo(x + centerPos.x, centerPos.y - y) :
-			dc->LineTo(x + centerPos.x, centerPos.y - y);
-	}
-
-	dc->SelectObject(prevPen);
-};
-
 
 
 class CMyApp:public CWinApp {
